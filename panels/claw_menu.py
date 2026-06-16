@@ -61,4 +61,4 @@ class Panel(ScreenPanel):
 
     def settings(self, widget):
         logging.info("Settings clicked")
-        self._screen._go_to_submenu("settings")
+        self._screen._go_to_submenu(widget, "settings")
