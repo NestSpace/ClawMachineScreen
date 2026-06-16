@@ -3,7 +3,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-from ks_includes.widgets.color_utils import get_css_color, invert_lightness, saturation_gradient
+from ks_includes.widgets.color_utils import get_css_color, invert_lightness
 
 
 class BedMap(Gtk.DrawingArea):
@@ -108,13 +108,6 @@ class BedMap(Gtk.DrawingArea):
         text_color = get_css_color(self)
         inverse_color = invert_lightness(*text_color)
 
-        # Get semantic colors for gradient
-        style_context = self.get_style_context()
-        found_red, red_rgba = style_context.lookup_color('solarized-red')
-        found_blue, blue_rgba = style_context.lookup_color('solarized-blue')
-        red_color = (red_rgba.red, red_rgba.green, red_rgba.blue) if found_red else (1.0, 0.0, 0.0)
-        blue_color = (blue_rgba.red, blue_rgba.green, blue_rgba.blue) if found_blue else (0.0, 0.0, 1.0)
-
         if self.bm is None:
             ctx.move_to(self.font_spacing, height / 2)
             ctx.set_source_rgb(*text_color)
@@ -161,14 +154,8 @@ class BedMap(Gtk.DrawingArea):
                     continue
                 lx = (gwidth / columns * j) + self.font_size * 2.2
                 rx = lx + gwidth / columns
-                # Colors - use HSL saturation gradient
-                if column > 0:
-                    color = saturation_gradient(*red_color, column, 0.25)
-                elif column < 0:
-                    color = saturation_gradient(*blue_color, abs(column), 0.25)
-                else:
-                    color = (1, 1, 1)  # White at zero
-                ctx.set_source_rgb(*color)
+                # Colors
+                ctx.set_source_rgb(*self.colorbar(column))
                 ctx.move_to(lx, ty)
                 ctx.line_to(lx, by)
                 ctx.line_to(rx, by)
