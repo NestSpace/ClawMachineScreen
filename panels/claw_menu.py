@@ -21,7 +21,7 @@ class Panel(ScreenPanel):
 
         # Create 6 large buttons with icons and labels
         buttons = [
-            ("qr-scan", "QR Scan", "color1", self.qr_scan),
+            ("qr", "QR Scan", "color1", self.qr_scan),
             ("joystick", "Joystick", "color2", self.joystick),
             ("info", "Tutorials", "color3", self.tutorials),
             ("card", "Register Card", "color4", self.register_card),
