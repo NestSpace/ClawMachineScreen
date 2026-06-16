@@ -903,7 +903,7 @@ class KlipperScreen(Gtk.Window):
             self.printer.state = "not ready"
             return
         self.files.refresh_files()
-        self.show_panel("main_menu", remove_all=True, items=self._config.get_menu_items("__main"))
+        self.show_panel("claw_menu", remove_all=True, items=self._config.get_menu_items("__main"))
         self.check_active_commands()
 
     def state_startup(self):
