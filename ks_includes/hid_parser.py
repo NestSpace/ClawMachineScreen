@@ -2,9 +2,8 @@
 
 # Default prefix mappings for HID devices
 DEFAULT_PREFIX_MAP = {
-    "CARD:": "card",
-    "QR:": "qr",
-    "TOKEN:": "token",
+    "Q": "qr",
+    "": "card",  # No prefix = NFC card/token
 }
 
 
@@ -23,10 +22,10 @@ def parse_hid_input(accumulated_string, prefix_map=None):
               content: input string with prefix stripped
 
     Example:
-        >>> parse_hid_input("CARD:123456789")
-        {"type": "card", "content": "123456789"}
+        >>> parse_hid_input("card-12345")
+        {"type": "card", "content": "card-12345"}
 
-        >>> parse_hid_input("QR:https://example.com")
+        >>> parse_hid_input("Qhttps://example.com")
         {"type": "qr", "content": "https://example.com"}
     """
     if prefix_map is None:
@@ -36,10 +35,17 @@ def parse_hid_input(accumulated_string, prefix_map=None):
     accumulated_upper = accumulated_string.upper()
 
     for prefix, device_type in prefix_map.items():
+        if prefix == "":
+            # Empty prefix matches everything - put this last in the dict
+            continue
         if accumulated_upper.startswith(prefix):
             return {
                 "type": device_type,
                 "content": accumulated_string[len(prefix):]  # Keep original case for content
             }
+
+    # No prefix matched - check if empty prefix exists (default to card/token)
+    if "" in prefix_map:
+        return {"type": prefix_map[""], "content": accumulated_string}
 
     return {"type": "unknown", "content": accumulated_string}

@@ -33,7 +33,7 @@ class Panel(ScreenPanel):
         for i, (icon, label, style, callback) in enumerate(buttons):
             row = i // 3
             col = i % 3
-            btn = self._gtk.Button(icon, label, style, scale=1.5)
+            btn = self._gtk.Button(icon, label, style, scale=3)
             btn.connect("clicked", callback)
             grid.attach(btn, col, row, 1, 1)
 

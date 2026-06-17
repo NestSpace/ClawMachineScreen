@@ -14,6 +14,9 @@ class Panel(ScreenPanel):
     def __init__(self, screen, title):
         super().__init__(screen, title)
 
+        # Store elevated API key after authentication
+        self.elevated_api_key = None
+
         # Main container
         main_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
@@ -99,6 +102,7 @@ class Panel(ScreenPanel):
 
         def on_auth_success(api_key, role):
             logging.info(f"Card management access granted to {role}")
+            self.elevated_api_key = api_key
 
         def on_auth_cancel():
             logging.info("Card management access denied - going back")
@@ -175,7 +179,7 @@ class Panel(ScreenPanel):
         """Register a new card via API."""
         try:
             url = f"{self._screen.apiclient.endpoint}/access/card/register"
-            headers = {"X-Api-Key": self._screen.apiclient.api_key}
+            headers = {"X-Api-Key": self.elevated_api_key or self._screen.apiclient.api_key}
 
             payload = {
                 "card_id": card_id,
@@ -216,7 +220,7 @@ class Panel(ScreenPanel):
         """De-register (delete) a card via API."""
         try:
             url = f"{self._screen.apiclient.endpoint}/access/card/delete"
-            headers = {"X-Api-Key": self._screen.apiclient.api_key}
+            headers = {"X-Api-Key": self.elevated_api_key or self._screen.apiclient.api_key}
             payload = {"card_id": card_id}
 
             response = requests.post(url, json=payload, headers=headers, timeout=5)
