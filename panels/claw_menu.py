@@ -24,8 +24,8 @@ class Panel(ScreenPanel):
             ("qr", "QR Scan", "color1", self.qr_scan),
             ("joystick", "Joystick", "color2", self.joystick),
             ("info", "Tutorials", "color3", self.tutorials),
-            ("card", "Register Card", "color4", self.register_card),
-            ("chip", "Register Token", "color1", self.register_token),
+            ("card", "Card Management", "color4", self.register_card),
+            ("coin", "Token Management", "color1", self.register_token),
             ("settings", "Settings", "color2", self.settings),
         ]
 
@@ -52,13 +52,13 @@ class Panel(ScreenPanel):
         self._screen.show_popup_message("Tutorials coming soon")
 
     def register_card(self, widget):
-        logging.info("Register Card clicked")
-        self._screen.show_popup_message("Card registration coming soon")
+        logging.info("Card Management clicked")
+        self._screen.show_panel("card_management", "Card Management", remove_all=False)
 
     def register_token(self, widget):
-        logging.info("Register Token clicked")
-        self._screen.show_popup_message("Token registration coming soon")
+        logging.info("Token Management clicked")
+        self._screen.show_panel("token_management", "Token Management", remove_all=False)
 
     def settings(self, widget):
         logging.info("Settings clicked")
-        self._screen.show_panel("settings", remove_all=False)
+        self._screen.show_panel("settings_protected", remove_all=False)

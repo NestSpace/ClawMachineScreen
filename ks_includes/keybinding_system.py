@@ -371,7 +371,7 @@ class KeyBindingSystem:
         # Execute action
         try:
             if action == "accumulate":
-                self._action_accumulate(binding, keyname)
+                self._action_accumulate(binding, keyname, event.keyval)
             elif action == "gcode":
                 self._action_gcode(binding)
             elif action == "exec_gcode":
@@ -395,14 +395,22 @@ class KeyBindingSystem:
             logging.exception(f"Error executing keybinding action '{action}': {e}")
             return False
 
-    def _action_accumulate(self, binding: Dict[str, Any], keyname: str):
+    def _action_accumulate(self, binding: Dict[str, Any], keyname: str, keyval: int):
         """Add key to accumulator buffer."""
         buffer_name = binding.get("buffer")
         if not buffer_name:
             logging.warning("Accumulate action requires 'buffer' field")
             return
 
-        self._accumulator_manager.add_char(buffer_name, keyname)
+        # Convert keyval to unicode character (like escalate screen does)
+        char = chr(Gdk.keyval_to_unicode(keyval))
+
+        # Only accumulate printable characters
+        if char and char.isprintable():
+            self._accumulator_manager.add_char(buffer_name, char)
+        else:
+            # Fallback to keyname for special keys (though typically we only accumulate printable)
+            logging.debug(f"Non-printable key '{keyname}' in accumulate action, skipping")
 
     def _action_gcode(self, binding: Dict[str, Any]):
         """Execute buffer contents as gcode."""
@@ -483,6 +491,10 @@ class KeyBindingSystem:
             )
         else:
             self._handlers[function_name](buffer_contents)
+
+        # Clear buffer after function executes (unless confirmation is pending)
+        if buffer_name and not binding.get("confirm"):
+            self._accumulator_manager.clear(buffer_name)
 
     def _action_exec_function(self, binding: Dict[str, Any]):
         """Call registered handler function without arguments."""

@@ -41,6 +41,7 @@ from ks_includes.printer import Printer
 from ks_includes.spoolman_api import SpoolmanAPI
 from ks_includes.widgets.keyboard import Keyboard
 from ks_includes.widgets.lockscreen import LockScreen
+from ks_includes.widgets.escalatescreen import EscalateScreen
 from ks_includes.widgets.prompts import Prompt
 from ks_includes.widgets.screensaver import ScreenSaver
 from panels.base_panel import BasePanel
@@ -158,6 +159,7 @@ class KlipperScreen(Gtk.Window):
         self.style_provider = Gtk.CssProvider()
         self.screensaver = ScreenSaver(self)
         self.lock_screen = LockScreen(self)
+        self.escalate_screen = EscalateScreen(self)
 
         # Initialize keybinding system
         try:
@@ -1391,6 +1393,11 @@ class KlipperScreen(Gtk.Window):
         if isinstance(focused, Gtk.Entry):
             return False  # Let GTK handle text entry
 
+        # Check if escalate screen is active - let it handle input first
+        if hasattr(self, 'escalate_screen') and self.escalate_screen.escalate_box:
+            logging.info("Key event: escalate screen is active, passing through")
+            return False  # Let escalate screen handler process it
+
         # Check screensaver - only allow wake
         if self.screensaver.is_showing:
             self.screensaver.close()
@@ -1398,9 +1405,13 @@ class KlipperScreen(Gtk.Window):
 
         # Delegate to keybinding system if available
         if self.keybinding_system:
+            logging.info(f"Key event: Delegating to keybinding system (keyval={event.keyval}, keyname={Gdk.keyval_name(event.keyval)})")
             handled = self.keybinding_system.handle_key_event(event)
             if handled:
+                logging.info(f"Key event: Handled by keybinding system")
                 return True
+            else:
+                logging.info(f"Key event: Not handled by keybinding system")
 
         # If keybinding system didn't handle it, ignore the key
         return False
