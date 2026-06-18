@@ -106,11 +106,12 @@ class Panel(ScreenPanel):
             self._screen.show_popup_message(f"Invalid input: {buffer_contents}", level=3)
 
     def _authenticate_card(self, card_id):
-        """Authenticate card via Moonraker API."""
+        """Trigger token action via Moonraker API."""
         import urllib.request
         import json
 
-        url = f"http://127.0.0.1:7125/access/card?card_id={card_id}&type=auth"
+        # Token cards use type=trigger to execute their registered action
+        url = f"http://127.0.0.1:7125/access/card?card_id={card_id}&type=trigger"
 
         try:
             req = urllib.request.Request(url)
@@ -118,28 +119,28 @@ class Panel(ScreenPanel):
                 data = json.loads(response.read().decode('utf-8'))
 
                 if 'result' in data:
-                    card_role = data['result']['type']
-                    api_key = data['result']['api_key']
+                    card_role = data['result'].get('type', 'unknown')
 
-                    logging.info(f"Card authenticated with role: {card_role}")
+                    logging.info(f"Token triggered with role: {card_role}")
 
-                    # For joystick mode, only "token" role is valid
+                    # For joystick mode, we expect "token" role
                     if card_role == "token":
-                        self.elevated_api_key = api_key
+                        # Token action is automatically triggered by Moonraker
+                        # (e.g., COIN_INSERT gcode command)
                         self._enable_joystick_control()
                         self._screen.show_popup_message("Token accepted - Joystick enabled", level=1)
                     else:
                         self._screen.show_popup_message(f"Invalid card type: {card_role}", level=3)
                 else:
-                    self._screen.show_popup_message("Card authentication failed", level=3)
+                    self._screen.show_popup_message("Token trigger failed", level=3)
 
         except urllib.error.HTTPError as e:
             error_msg = e.read().decode('utf-8')
-            logging.error(f"Card authentication HTTP error: {e.code} - {error_msg}")
-            self._screen.show_popup_message("Card not found or invalid", level=3)
+            logging.error(f"Token trigger HTTP error: {e.code} - {error_msg}")
+            self._screen.show_popup_message("Token not found or invalid", level=3)
         except Exception as e:
-            logging.exception(f"Card authentication error: {e}")
-            self._screen.show_popup_message(f"Authentication error: {str(e)}", level=3)
+            logging.exception(f"Token trigger error: {e}")
+            self._screen.show_popup_message(f"Trigger error: {str(e)}", level=3)
 
     def _enable_joystick_control(self):
         """Enable joystick and button controls after successful authentication."""
