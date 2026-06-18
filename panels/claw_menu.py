@@ -21,8 +21,8 @@ class Panel(ScreenPanel):
 
         # Create 6 large buttons with icons and labels
         buttons = [
-            ("qr", "QR Scan", "color1", self.qr_scan),
-            ("joystick", "Joystick", "color2", self.joystick),
+            ("qr", "QR Mode", "color1", self.qr_scan),
+            ("joystick", "Joystick Mode", "color2", self.joystick),
             ("info", "Tutorials", "color3", self.tutorials),
             ("card", "Card Management", "color4", self.register_card),
             ("coin", "Token Management", "color1", self.register_token),
@@ -40,12 +40,12 @@ class Panel(ScreenPanel):
         self.content.add(grid)
 
     def qr_scan(self, widget):
-        logging.info("QR Scan clicked")
-        self._screen.show_popup_message("QR Scan feature coming soon")
+        logging.info("QR Mode clicked")
+        self._screen.show_panel("qr_mode", "QR Mode", remove_all=False)
 
     def joystick(self, widget):
-        logging.info("Joystick clicked")
-        self._screen.show_popup_message("Joystick control coming soon")
+        logging.info("Joystick Mode clicked")
+        self._screen.show_panel("joystick_mode", "Joystick Mode", remove_all=False)
 
     def tutorials(self, widget):
         logging.info("Tutorials clicked")

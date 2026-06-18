@@ -71,7 +71,7 @@ class Panel(ScreenPanel):
         # Toggle button for Infinite/Single-use mode
         self.use_toggle = Gtk.ToggleButton(label="Single-use")
         self.use_toggle.set_size_request(300, 80)
-        self.use_toggle.get_style_context().add_class("color1")  # Orange for single-use
+        self.use_toggle.get_style_context().add_class("color3")  # Cyan for single-use
         self.use_toggle.set_active(True)  # Default to single-use
         self.use_toggle.connect("toggled", self.on_use_toggle)
         right_box.pack_start(self.use_toggle, False, False, 0)
@@ -133,15 +133,15 @@ class Panel(ScreenPanel):
     def on_use_toggle(self, toggle_btn):
         """Handle toggle between Infinite and Single-use modes."""
         if toggle_btn.get_active():
-            # Single-use mode (orange)
+            # Single-use mode (cyan)
             toggle_btn.set_label("Single-use")
-            toggle_btn.get_style_context().remove_class("color3")
-            toggle_btn.get_style_context().add_class("color1")
-        else:
-            # Infinite mode (cyan)
-            toggle_btn.set_label("Infinite")
             toggle_btn.get_style_context().remove_class("color1")
             toggle_btn.get_style_context().add_class("color3")
+        else:
+            # Infinite mode (orange)
+            toggle_btn.set_label("Infinite")
+            toggle_btn.get_style_context().remove_class("color3")
+            toggle_btn.get_style_context().add_class("color1")
 
     def on_card_token_scanned(self, buffer_contents):
         """Handle accumulated keyboard input from HID device."""
