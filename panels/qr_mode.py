@@ -132,12 +132,91 @@ class Panel(ScreenPanel):
 
         # QR mode expects QR codes
         if parsed["type"] == "qr":
-            # TODO: Implement QR code processing
-            self._screen.show_popup_message("QR code received (processing not implemented yet)", level=2)
-            return
+            qr_content = parsed["content"].strip()
+            if not qr_content:
+                self._screen.show_popup_message("QR code is empty", level=3)
+                return
+
+            # Check if in manual or auto mode
+            is_manual = not self.mode_toggle.get_active()  # False = Manual, True = Auto
+
+            if is_manual:
+                self._show_qr_confirmation(qr_content)
+            else:
+                self._send_qr_to_moonraker(qr_content)
         elif parsed["type"] == "card":
             self._screen.show_popup_message("Please scan a QR code, not a card", level=2)
-            return
         else:
             self._screen.show_popup_message(f"Invalid input: {buffer_contents}", level=3)
-            return
+
+    def _show_qr_confirmation(self, qr_content):
+        """Show confirmation dialog for manual mode."""
+        label = Gtk.Label(label=f"Send QR code to printer?\n\n{qr_content}")
+        label.set_line_wrap(True)
+
+        buttons = [
+            {
+                "name": _("Confirm"),
+                "response": Gtk.ResponseType.OK,
+                "style": "dialog-info",
+            },
+            {
+                "name": _("Cancel"),
+                "response": Gtk.ResponseType.CANCEL,
+                "style": "dialog-error",
+            },
+        ]
+
+        self._gtk.Dialog(
+            "Confirm QR Code",
+            buttons,
+            label,
+            self._on_qr_confirmation_response,
+            qr_content
+        )
+
+    def _on_qr_confirmation_response(self, dialog, response_id, qr_content):
+        """Handle confirmation dialog response."""
+        self._gtk.remove_dialog(dialog)
+
+        if response_id == Gtk.ResponseType.OK:
+            # User confirmed - send to Moonraker
+            self._send_qr_to_moonraker(qr_content)
+        else:
+            # User cancelled
+            logging.info("QR code scan cancelled by user")
+            self._screen.show_popup_message("QR code scan cancelled", level=2)
+
+    def _send_qr_to_moonraker(self, qr_content):
+        """Send QR code content to Moonraker gcode endpoint."""
+        import urllib.request
+        import json
+
+        url = f"http://127.0.0.1:7125/printer/gcode/script"
+
+        try:
+            # Use elevated API key from escalate_screen
+            api_key = self.elevated_api_key or self._screen.apiclient.api_key
+            headers = {
+                "X-Api-Key": api_key,
+                "Content-Type": "application/json"
+            }
+
+            # Send QR content as gcode script
+            payload = {"script": qr_content}
+            data = json.dumps(payload).encode('utf-8')
+
+            req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=5) as response:
+                result = json.loads(response.read().decode('utf-8'))
+
+                logging.info(f"QR code sent successfully: {qr_content}")
+                self._screen.show_popup_message("QR code sent to printer", level=1)
+
+        except urllib.error.HTTPError as e:
+            error_msg = e.read().decode('utf-8')
+            logging.error(f"QR send HTTP error: {e.code} - {error_msg}")
+            self._screen.show_popup_message(f"Failed to send QR code: {e.code}", level=3)
+        except Exception as e:
+            logging.exception(f"QR send error: {e}")
+            self._screen.show_popup_message(f"Error sending QR code: {str(e)}", level=3)
